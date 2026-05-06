@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import pool from '../database/db'
+import pool from '../config/db'
 import { CreateDoctorRequest, UpdateDoctorRequest } from '../types'
 import { hashPassword } from '../utils/auth'
 
@@ -183,7 +183,7 @@ export const removeDoctor = async (
 			return
 		}
 
-		const existing = await pool.query(`SELECT id FROM doctors WHERE id = $1`, [
+		const existing = await pool.query(`SELECT id FROM doctor WHERE id = $1`, [
 			id,
 		])
 		if (!existing.rows[0]) {
