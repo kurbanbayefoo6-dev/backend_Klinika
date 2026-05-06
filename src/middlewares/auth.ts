@@ -18,7 +18,7 @@ export const authMiddleware = (
 		const token = req.headers.authorization?.split(' ')[1]
 
 		if (!token) {
-			return res.status(401).json({ message: ' Token topilmadi' })
+			return res.status(401).json({ message: 'Token topilmadi' })
 		}
 
 		const decoded = verifyToken(token)
@@ -26,12 +26,12 @@ export const authMiddleware = (
 		if (!decoded) {
 			return res
 				.status(401)
-				.json({ message: " Token noto'g'ri yoki eskirgan" })
+				.json({ message: "Token noto'g'ri yoki eskirgan" })
 		}
 
 		req.user = decoded
 		next()
 	} catch (error) {
-		res.status(401).json({ message: ' Authorization xatosi' })
+		res.status(401).json({ message: 'Authorization xatosi' })
 	}
 }

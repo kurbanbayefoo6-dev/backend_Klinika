@@ -31,7 +31,7 @@ export const addDoctor = async (req: Request, res: Response): Promise<void> => {
 
 		const hashedPassword = await hashPassword(body.password)
 		const result = await pool.query(
-			`INSERT INTO doctors (
+			`INSERT INTO doctor (
 				full_name, specialty, username, password, phone, status, profile_img_url, role
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,'doctor') RETURNING id, full_name, specialty, username, phone, status, profile_img_url, role`,
 			[
@@ -68,7 +68,7 @@ export const viewAllDoctors = async (
 
 		const result = await pool.query(
 			`SELECT id, full_name, specialty, username, phone, status, profile_img_url, role
-			 FROM doctors ORDER BY id DESC`,
+			 FROM doctor ORDER BY id DESC`,
 		)
 		res.json({ doctors: result.rows })
 	} catch (error) {
@@ -85,7 +85,7 @@ export const editDoctor = async (
 ): Promise<void> => {
 	try {
 		if (!isAdmin(req)) {
-			res.status(403).json({ message: '❌ Ruxsat yoq' })
+			res.status(403).json({ message: 'Ruxsat yoq' })
 			return
 		}
 
@@ -94,7 +94,7 @@ export const editDoctor = async (
 		const profileImgUrl = body.profile_img_url ?? body.profile_img
 
 		if (Number.isNaN(id)) {
-			res.status(400).json({ message: "❌ Noto'g'ri id" })
+			res.status(400).json({ message: "Noto'g'ri id" })
 			return
 		}
 
@@ -111,7 +111,7 @@ export const editDoctor = async (
 			return
 		}
 
-		const existing = await pool.query(`SELECT id FROM doctors WHERE id = $1`, [
+		const existing = await pool.query(`SELECT id FROM doctor WHERE id = $1`, [
 			id,
 		])
 		if (!existing.rows[0]) {
@@ -155,7 +155,7 @@ export const editDoctor = async (
 		values.push(id)
 
 		const result = await pool.query(
-			`UPDATE doctors SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, full_name, specialty, username, phone, status, profile_img_url, role`,
+			`UPDATE doctor SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, full_name, specialty, username, phone, status, profile_img_url, role`,
 			values,
 		)
 		res.json({ message: '✅ Shifokor yangilandi', doctor: result.rows[0] })
@@ -191,7 +191,7 @@ export const removeDoctor = async (
 			return
 		}
 
-		await pool.query(`DELETE FROM doctors WHERE id = $1`, [id])
+		await pool.query(`DELETE FROM doctor WHERE id = $1`, [id])
 		res.json({ message: "✅ Shifokor o'chirildi" })
 	} catch (error) {
 		res
@@ -223,7 +223,7 @@ export const viewAppointments = async (
 				a.status
 			 FROM appointments a
 			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctors d ON d.id = a.doctor_id
+			 LEFT JOIN doctor d ON d.id = a.doctor_id
 			 ORDER BY a.id DESC`,
 		)
 		res.json({ appointments: result.rows })

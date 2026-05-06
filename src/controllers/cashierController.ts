@@ -81,7 +81,7 @@ export const createNewAppointment = async (
 			return
 		}
 
-		const doctor = await pool.query(`SELECT id FROM doctors WHERE id = $1`, [
+		const doctor = await pool.query(`SELECT id FROM doctor WHERE id = $1`, [
 			Number(body.doctor_id),
 		])
 		if (!doctor.rows[0]) {
@@ -134,7 +134,7 @@ export const viewAppointments = async (
 				a.status
 			 FROM appointments a
 			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctors d ON d.id = a.doctor_id
+			 LEFT JOIN doctor d ON d.id = a.doctor_id
 			 ORDER BY a.id DESC`,
 		)
 		res.json({ appointments: result.rows })
@@ -196,7 +196,7 @@ export const editAppointment = async (
 		}
 
 		if (body.doctor_id !== undefined) {
-			const doctor = await pool.query(`SELECT id FROM doctors WHERE id = $1`, [
+			const doctor = await pool.query(`SELECT id FROM doctor WHERE id = $1`, [
 				Number(body.doctor_id),
 			])
 			if (!doctor.rows[0]) {

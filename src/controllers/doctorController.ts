@@ -29,7 +29,7 @@ export const viewMyAppointments = async (
 				a.status
 			 FROM appointments a
 			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctors d ON d.id = a.doctor_id
+			 LEFT JOIN doctor d ON d.id = a.doctor_id
 			 WHERE a.doctor_id = $1
 			 ORDER BY a.id DESC`,
 			[doctorId],
@@ -83,7 +83,7 @@ export const createNewPrescription = async (
 		}
 
 		const result = await pool.query(
-			`INSERT INTO prescriptions (appointment_id, recommendations, duration) VALUES ($1,$2,$3) RETURNING id, appointment_id, recommendations, duration, created_at`,
+			`INSERT INTO prescription (appointment_id, recommendations, duration) VALUES ($1,$2,$3) RETURNING id, appointment_id, recommendations, duration, created_at`,
 			[Number(body.appointment_id), body.recommendations, body.duration],
 		)
 
