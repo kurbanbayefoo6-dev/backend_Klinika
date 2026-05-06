@@ -29,13 +29,13 @@ export const createNewPatient = async (
 		}
 
 		const result = await pool.query(
-			`INSERT INTO patients (full_name, phone, address, date_of_birth)
-			 VALUES ($1,$2,$3,$4) RETURNING id, full_name, phone, address, date_of_birth`,
+			`INSERT INTO patients (full_name, birth_date, gender, address)
+			 VALUES ($1,$2,$3,$4) RETURNING id, full_name, birth_date, gender, address`,
 			[
 				body.full_name,
-				body.phone ?? null,
+				body.birth_date ?? null,
+				body.gender ?? null,
 				body.address,
-				body.date_of_birth ?? null,
 			],
 		)
 
@@ -90,13 +90,13 @@ export const createNewAppointment = async (
 		}
 
 		const result = await pool.query(
-			`INSERT INTO appointments (patient_id, doctor_id, appointment_date, reason, status)
-			 VALUES ($1,$2,$3,$4,$5) RETURNING id, patient_id, doctor_id, appointment_date, reason, status`,
+			`INSERT INTO appointments (patient_id_fk, doctor_id_fk, cashier_id_fk, appointment_date, status)
+			 VALUES ($1,$2,$3,$4,$5) RETURNING id, patient_id_fk, doctor_id_fk, cashier_id_fk, appointment_date, status`,
 			[
 				Number(body.patient_id),
 				Number(body.doctor_id),
+				req.user?.id ?? null,
 				body.appointment_date,
-				body.reason ?? null,
 				body.status ?? 'scheduled',
 			],
 		)
@@ -125,16 +125,15 @@ export const viewAppointments = async (
 		const result = await pool.query(
 			`SELECT
 				a.id,
-				a.patient_id,
+				a.patient_id_fk,
 				p.full_name AS patient_name,
-				a.doctor_id,
+				a.doctor_id_fk,
 				d.full_name AS doctor_name,
 				a.appointment_date,
-				a.reason,
 				a.status
 			 FROM appointments a
-			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctor d ON d.id = a.doctor_id
+			 LEFT JOIN patients p ON p.id = a.patient_id_fk
+			 LEFT JOIN doctor d ON d.id = a.doctor_id_fk
 			 ORDER BY a.id DESC`,
 		)
 		res.json({ appointments: result.rows })
@@ -168,7 +167,6 @@ export const editAppointment = async (
 			body.patient_id === undefined &&
 			body.doctor_id === undefined &&
 			body.appointment_date === undefined &&
-			body.reason === undefined &&
 			body.status === undefined
 		) {
 			res.status(400).json({ message: "❌ Yangilash uchun ma'lumot kerak" })
@@ -208,20 +206,16 @@ export const editAppointment = async (
 		const fields: string[] = []
 		const values: Array<string | number | null> = []
 		if (body.patient_id !== undefined) {
-			fields.push(`patient_id = $${fields.length + 1}`)
+			fields.push(`patient_id_fk = $${fields.length + 1}`)
 			values.push(body.patient_id)
 		}
 		if (body.doctor_id !== undefined) {
-			fields.push(`doctor_id = $${fields.length + 1}`)
+			fields.push(`doctor_id_fk = $${fields.length + 1}`)
 			values.push(body.doctor_id)
 		}
 		if (body.appointment_date !== undefined) {
 			fields.push(`appointment_date = $${fields.length + 1}`)
 			values.push(body.appointment_date)
-		}
-		if (body.reason !== undefined) {
-			fields.push(`reason = $${fields.length + 1}`)
-			values.push(body.reason)
 		}
 		if (body.status !== undefined) {
 			fields.push(`status = $${fields.length + 1}`)
@@ -231,7 +225,7 @@ export const editAppointment = async (
 		values.push(id)
 
 		const result = await pool.query(
-			`UPDATE appointments SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, patient_id, doctor_id, appointment_date, reason, status`,
+			`UPDATE appointments SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, patient_id_fk, doctor_id_fk, cashier_id_fk, appointment_date, status`,
 			values,
 		)
 		res.json({
@@ -271,7 +265,7 @@ export const cancelExistingAppointment = async (
 		}
 
 		const result = await pool.query(
-			`UPDATE appointments SET status = 'cancelled' WHERE id = $1 RETURNING id, patient_id, doctor_id, appointment_date, reason, status`,
+			`UPDATE appointments SET status = 'cancelled' WHERE id = $1 RETURNING id, patient_id_fk, doctor_id_fk, cashier_id_fk, appointment_date, status`,
 			[id],
 		)
 		res.json({
@@ -301,10 +295,10 @@ export const createNewPayment = async (
 		if (
 			body.appointment_id === undefined ||
 			body.amount === undefined ||
-			!body.method?.trim()
+			!(body.payment_method?.trim() || body.method?.trim())
 		) {
 			res.status(400).json({
-				message: '❌ appointment_id, amount va method kerak',
+				message: '❌ appointment_id, amount va payment_method kerak',
 			})
 			return
 		}
@@ -318,12 +312,11 @@ export const createNewPayment = async (
 		}
 
 		const result = await pool.query(
-			`INSERT INTO payments (appointment_id, amount, method, payment_date) VALUES ($1,$2,$3,$4) RETURNING id, appointment_id, amount, method, payment_date`,
+			`INSERT INTO payments (appointment_id_fk, amount, payment_method, payment_date) VALUES ($1,$2,$3,CURRENT_DATE) RETURNING id, appointment_id_fk, amount, payment_method, payment_date`,
 			[
 				Number(body.appointment_id),
 				Number(body.amount),
-				body.method,
-				body.payment_date ?? new Date().toISOString(),
+				body.payment_method ?? body.method,
 			],
 		)
 

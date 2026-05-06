@@ -214,16 +214,15 @@ export const viewAppointments = async (
 		const result = await pool.query(
 			`SELECT
 				a.id,
-				a.patient_id,
+				a.patient_id_fk,
 				p.full_name AS patient_name,
-				a.doctor_id,
+				a.doctor_id_fk,
 				d.full_name AS doctor_name,
 				a.appointment_date,
-				a.reason,
 				a.status
 			 FROM appointments a
-			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctor d ON d.id = a.doctor_id
+			 LEFT JOIN patients p ON p.id = a.patient_id_fk
+			 LEFT JOIN doctor d ON d.id = a.doctor_id_fk
 			 ORDER BY a.id DESC`,
 		)
 		res.json({ appointments: result.rows })

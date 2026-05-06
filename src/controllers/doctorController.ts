@@ -20,17 +20,16 @@ export const viewMyAppointments = async (
 		const result = await pool.query(
 			`SELECT
 				a.id,
-				a.patient_id,
+				a.patient_id_fk,
 				p.full_name AS patient_name,
-				a.doctor_id,
+				a.doctor_id_fk,
 				d.full_name AS doctor_name,
 				a.appointment_date,
-				a.reason,
 				a.status
 			 FROM appointments a
-			 LEFT JOIN patients p ON p.id = a.patient_id
-			 LEFT JOIN doctor d ON d.id = a.doctor_id
-			 WHERE a.doctor_id = $1
+			 LEFT JOIN patients p ON p.id = a.patient_id_fk
+			 LEFT JOIN doctor d ON d.id = a.doctor_id_fk
+			 WHERE a.doctor_id_fk = $1
 			 ORDER BY a.id DESC`,
 			[doctorId],
 		)
@@ -55,13 +54,9 @@ export const createNewPrescription = async (
 
 		const body = req.body as CreatePrescriptionRequest
 
-		if (
-			body.appointment_id === undefined ||
-			!body.recommendations?.trim() ||
-			!body.duration?.trim()
-		) {
+		if (body.appointment_id === undefined || !body.recommendations?.trim()) {
 			res.status(400).json({
-				message: '❌ appointment_id, recommendations va duration kerak',
+				message: '❌ appointment_id va recommendations kerak',
 			})
 			return
 		}
@@ -77,14 +72,18 @@ export const createNewPrescription = async (
 			return
 		}
 
-		if (appointment.doctor_id !== req.user?.id) {
+		if (appointment.doctor_id_fk !== req.user?.id) {
 			res.status(403).json({ message: '❌ Bu uchrashuv sizga tegishli emas' })
 			return
 		}
 
 		const result = await pool.query(
-			`INSERT INTO prescription (appointment_id, recommendations, duration) VALUES ($1,$2,$3) RETURNING id, appointment_id, recommendations, duration, created_at`,
-			[Number(body.appointment_id), body.recommendations, body.duration],
+			`INSERT INTO prescription (appointment_id_fk, diagnosis_description, recommendations) VALUES ($1,$2,$3) RETURNING id, appointment_id_fk, diagnosis_description, recommendations`,
+			[
+				Number(body.appointment_id),
+				body.diagnosis_description ?? null,
+				body.recommendations,
+			],
 		)
 
 		res

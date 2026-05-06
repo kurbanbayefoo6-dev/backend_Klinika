@@ -61,24 +61,24 @@ export interface UpdateDoctorRequest {
 export interface Patient {
 	id: number
 	full_name: string
-	phone?: string | null
+	birth_date?: string | null
+	gender?: string | null
 	address: string
-	date_of_birth?: string | null
 }
 
 export interface CreatePatientRequest {
 	full_name: string
-	phone?: string
+	birth_date?: string
+	gender?: string
 	address: string
-	date_of_birth?: string
 }
 
 export interface Appointment {
 	id: number
-	patient_id: number
-	doctor_id: number
+	patient_id_fk: number
+	doctor_id_fk: number
+	cashier_id_fk?: number | null
 	appointment_date: string
-	reason?: string | null
 	status: string
 }
 
@@ -86,7 +86,6 @@ export interface CreateAppointmentRequest {
 	patient_id: number
 	doctor_id: number
 	appointment_date: string
-	reason?: string
 	status?: string
 }
 
@@ -94,35 +93,33 @@ export interface UpdateAppointmentRequest {
 	patient_id?: number
 	doctor_id?: number
 	appointment_date?: string
-	reason?: string
 	status?: string
 }
 
 export interface Payment {
 	id: number
-	appointment_id: number
+	appointment_id_fk: number
 	amount: number
-	method: string
+	payment_method: string
 	payment_date?: string | null
 }
 
 export interface CreatePaymentRequest {
 	appointment_id: number
 	amount: number
-	method: string
-	payment_date?: string
+	method?: string
+	payment_method?: string
 }
 
 export interface Prescription {
 	id: number
-	appointment_id: number
+	appointment_id_fk: number
+	diagnosis_description?: string | null
 	recommendations: string
-	duration: string
-	created_at?: string | null
 }
 
 export interface CreatePrescriptionRequest {
 	appointment_id: number
+	diagnosis_description?: string
 	recommendations: string
-	duration: string
 }
